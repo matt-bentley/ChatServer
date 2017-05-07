@@ -6,7 +6,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 
-namespace MattBentley2
+namespace ChatServer
 {
     public class Startup
     {

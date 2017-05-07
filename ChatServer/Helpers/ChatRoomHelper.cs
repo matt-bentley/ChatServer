@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChatServer.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Caching;
@@ -8,26 +9,26 @@ namespace ChatServer.Helpers
 {
     public static class ChatRoomHelper
     {
-        public static void TryAddChatRoom(string chatRoom)
+        public static void TryAddChatRoom(ChatRoom chatRoom)
         {
             ObjectCache cache = MemoryCache.Default;
-            string tryRoom = cache[chatRoom] as string;
+            string tryRoom = cache[chatRoom.Id.ToString()] as string;
         
             if (tryRoom == null)
             {
                 CacheItemPolicy policy = new CacheItemPolicy();
 
-                cache.Set(chatRoom, chatRoom, policy);
+                cache.Set(chatRoom.Id.ToString(), chatRoom, policy);
             }
         }
 
-        public static List<string> GetChatRooms()
+        public static List<ChatRoom> GetChatRooms()
         {
-            List<string> chatRooms = new List<string>();
+            List<ChatRoom> chatRooms = new List<ChatRoom>();
             ObjectCache cache = MemoryCache.Default;
             foreach(var room in cache)
             {
-                chatRooms.Add(room.Value.ToString());
+                chatRooms.Add((ChatRoom)room.Value);
             }
             return chatRooms;
         }

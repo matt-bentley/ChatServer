@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
+using System.Web.Configuration;
 using System.Web.Http;
 
 namespace ChatServer.Controllers.api
@@ -16,8 +17,7 @@ namespace ChatServer.Controllers.api
     public class ChatController : ApiController
     {
         private IHubContext _context;
-
-        private string _channel = "tasks";
+        private static readonly string _adminId = WebConfigurationManager.AppSettings["adminKey"];
 
         public ChatController()
         {
@@ -33,14 +33,43 @@ namespace ChatServer.Controllers.api
             return Ok(chatRooms);
         }
 
-        [Route("PostMessage/{message}")]
+        [Route("AddRoom/{roomName}/{createdBy}")]
         [HttpPost]
-        public IHttpActionResult PostMessage(string message)
+        public IHttpActionResult AddRoom(string roomName, string createdBy)
         {
-            _context.Clients.Group(_channel).OnEvent("tasks", new MessageEvent
+            ChatRoom chatRoom = new ChatRoom()
             {
-                Username = "api",
-                ChatRoom = "demo",
+                Name = roomName,
+                CreatedBy = createdBy
+            };
+
+            ChatRoomHelper.TryAddChatRoom(chatRoom);
+
+            _context.Clients.Group(_adminId).OnEvent(_adminId, new MessageEvent
+            {
+                Username = "Chat Server",
+                ChatRoom = _adminId,
+                Message = $"{roomName} created by {createdBy}"
+            });
+
+            return Ok(chatRoom);
+        }
+
+        [Route("PostMessage/{message}/{userName}/{chatRoom}")]
+        [HttpPost]
+        public IHttpActionResult PostMessage(string message, string userName, string chatRoom)
+        {
+            _context.Clients.Group(chatRoom).OnEvent(chatRoom, new MessageEvent
+            {
+                Username = userName,
+                ChatRoom = chatRoom,
+                Message = message
+            });
+
+            _context.Clients.Group(_adminId).OnEvent(_adminId, new MessageEvent
+            {
+                Username = userName,
+                ChatRoom = chatRoom,
                 Message = message
             });
 

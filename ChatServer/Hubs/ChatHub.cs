@@ -6,23 +6,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Configuration;
 
 namespace ChatServer.Hubs
 {
     public class ChatHub : Hub
     {
+        private static readonly string _adminId = WebConfigurationManager.AppSettings["adminKey"];
+
         public async Task Subscribe(string channel)
         {
             await Groups.Add(Context.ConnectionId, channel);
 
             var ev = new MessageEvent
             {
-                ChatRoom = "admin",
-                Username = "user.subscribed",
-                Message = "subscribed to group"
+                ChatRoom = _adminId,
+                Username = "Chat Server",
+                Message = $"{Context.ConnectionId} subscribed to room {channel}"
             };
-
-            ChatRoomHelper.TryAddChatRoom(channel);
 
             await Publish(ev);
         }
@@ -33,24 +34,24 @@ namespace ChatServer.Hubs
 
             var ev = new MessageEvent
             {
-                ChatRoom = "admin",
-                Username = "user.unsubscribed",
-                Message = "unsubscribed from group"
+                ChatRoom = _adminId,
+                Username = "Chat Server",
+                Message = $"{Context.ConnectionId} unsubscribed to room {channel}"
             };
 
             await Publish(ev);
         }
 
 
-        public Task Publish(MessageEvent channelEvent)
+        public Task Publish(MessageEvent messageEvent)
         {
-            Clients.Group(channelEvent.ChatRoom).OnEvent(channelEvent.ChatRoom, channelEvent);
+            Clients.Group(messageEvent.ChatRoom).OnEvent(messageEvent.ChatRoom, messageEvent);
 
-            if (channelEvent.ChatRoom != "admin")
+            if (messageEvent.ChatRoom != _adminId)
             {
                 // Push this out on the admin channel
                 //
-                Clients.Group("admin").OnEvent("admin", channelEvent);
+                Clients.Group(_adminId).OnEvent(_adminId, messageEvent);
             }
 
             return Task.FromResult(0);
@@ -61,9 +62,9 @@ namespace ChatServer.Hubs
         {
             var ev = new MessageEvent
             {
-                ChatRoom = "admin",
-                Username = "user.connected",
-                Message = "user connected"
+                ChatRoom = _adminId,
+                Username = "Chat Server",
+                Message = $"{Context.ConnectionId} connected to a hub"
             };
 
             Publish(ev);
@@ -76,9 +77,9 @@ namespace ChatServer.Hubs
         {
             var ev = new MessageEvent
             {
-                ChatRoom = "admin",
-                Username = "user.disconnected",
-                Message = "user disconnected"
+                ChatRoom = _adminId,
+                Username = "Chat Server",
+                Message = $"{Context.ConnectionId} disconnected from a hub"
             };
 
             Publish(ev);

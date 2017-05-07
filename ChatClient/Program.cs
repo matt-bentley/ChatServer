@@ -25,8 +25,8 @@ namespace ChatClient
 
             // Join the channel for task updates in our console window
             //
-            eventHubProxy.Invoke("Subscribe", "admin");
-            eventHubProxy.Invoke("Subscribe", "tasks");
+            eventHubProxy.Invoke("Subscribe", "e7de7c74-14a4-4541-bd95-512a2717e7ab");
+            eventHubProxy.Invoke("Subscribe", "demoRoom");
 
             Console.WriteLine($"Server is running on {baseAddress}");
             Console.WriteLine("Press <enter> to stop server");
